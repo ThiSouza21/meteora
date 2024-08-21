@@ -1,10 +1,10 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { createContext, useEffect, useState } from "react";
 import { api } from "../src/api.tsx";
 import { ISuccess } from "../interfaces/ISuccess.ts";
 import { IError } from "../interfaces/IError.ts";
 import { AxiosResponse } from "axios";
 import { useError } from "../hooks/useError.tsx";
-import { jwtDecode } from "jwt-decode";
 
 import { useNavigate } from "react-router-dom";
 
@@ -33,33 +33,26 @@ export function AuthContext({ children }: Props) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    setLoading(false);
-
-    const token = localStorage.getItem("token");
-
-    const checkToken = () => {
-      if (token) {
-        try {
-          const decoded = jwtDecode(token);
-          const now = Date.now() / 1000;
-
-          const isTokenExpired = decoded.exp ? decoded.exp < now : true;
-
-          if (isTokenExpired) {
-            return handleLogout();
-          }
-
-          api().defaults.headers.Authorization = `Bearer ${token}`;
+    const checkAuthStatus = async () => {
+      try {
+        const response = await api().get("/auth/check");
+        if (response.status === 200) {
           setAuthorization(true);
-        } catch (error) {
-          if (error) handleLogout();
+        } else {
+          handleLogout();
+          setAuthorization(false);
         }
+      } catch (error) {
+        if (error) {
+          await handleLogout();
+          setAuthorization(false);
+        }
+      } finally {
+        setLoading(false);
       }
-
-      setLoading(false);
     };
 
-    checkToken();
+    checkAuthStatus();
   }, []);
 
   const handleLogin = async (
@@ -107,23 +100,21 @@ export function AuthContext({ children }: Props) {
             headers: {
               "Content-Type": "application/json",
             },
+            withCredentials: true,
           }
         );
-      console.log("3");
 
       if ("error" in dataResponse.data) {
         const { error } = dataResponse.data;
         throw new Error(error.message);
       }
 
-      const { success } = dataResponse.data;
-
-      localStorage.setItem("token", success.accessToken);
-      api().defaults.headers.Authorization = success.accessToken;
-      setError({});
-      setLoading(false);
-      setAuthorization(true);
-      navigate("/home");
+      if ("success" in dataResponse.data) {
+        setError({});
+        setLoading(false);
+        setAuthorization(true);
+        navigate("/home");
+      }
     } catch (error) {
       setAuthorization(false);
       setLoading(false);
@@ -136,13 +127,18 @@ export function AuthContext({ children }: Props) {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setLoading(true);
 
-    setAuthorization(false);
-    localStorage.removeItem("token");
-    api().defaults.headers.Authorization = "";
-    setLoading(false);
+    try {
+      await api().get("/auth/logout");
+    } catch (error) {
+      if (error) {
+        setAuthorization(false);
+        setLoading(false);
+        navigate("/login");
+      }
+    }
   };
 
   return (

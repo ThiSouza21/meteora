@@ -53,6 +53,9 @@ class Controller {
                 const dto = req.body;
                 if (!dto)
                     throw new Error("Está faltando alguma informação.");
+                if (!dto.role) {
+                    dto.role = "user";
+                }
                 const user = yield this.serviceEntity.createdUsers(dto);
                 res.status(201).json({
                     success: {

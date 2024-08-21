@@ -8,23 +8,20 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.authService = void 0;
 require("dotenv/config");
-const models_1 = __importDefault(require("../models"));
 const bcrypt_1 = require("bcrypt");
 const jsonwebtoken_1 = require("jsonwebtoken");
+const UsuariosModel_1 = require("../db/models/UsuariosModel");
 class AuthService {
-    constructor(nameModel) {
-        this.model = models_1.default[nameModel];
+    constructor(model) {
+        this.model = model;
     }
     login(dto) {
         return __awaiter(this, void 0, void 0, function* () {
             const validatedUser = yield this.model.findOne({
-                attributes: ["id", "email", "senha"],
+                attributes: ["id", "email", "senha", "role"],
                 where: { email: dto.email },
             });
             if (!validatedUser)
@@ -44,4 +41,4 @@ class AuthService {
         });
     }
 }
-exports.authService = new AuthService("usuarios");
+exports.authService = new AuthService(UsuariosModel_1.UsuariosModel);

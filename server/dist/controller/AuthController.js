@@ -20,7 +20,13 @@ class AuthController {
             const { email, senha } = req.body;
             try {
                 const loginUser = yield this.serviceEntity.login({ email, senha });
-                res.status(200).json({ success: loginUser });
+                res.cookie("token", loginUser.accessToken, {
+                    maxAge: 5 * 60 * 1000,
+                    httpOnly: true,
+                    secure: false,
+                    sameSite: "none",
+                });
+                res.status(200).json({ success: { message: "Usuario encontrado!" } });
             }
             catch (error) {
                 if (error instanceof Error)

@@ -1,20 +1,22 @@
 import "dotenv/config";
-import { Model, ModelStatic } from "sequelize";
-import db from "../models";
+import { Attributes, Model, WhereOptions } from "sequelize";
+import { db } from "../db/models";
 import { compare } from "bcrypt";
 import { sign } from "jsonwebtoken";
 import { IUsuarios } from "../interfaces/IUsuarios";
+import { Models } from "./Service";
+import { UsuariosModel } from "../db/models/UsuariosModel";
 
-class AuthService {
-  model: ModelStatic<Model<IUsuarios>>;
-  constructor(nameModel: string) {
-    this.model = db[nameModel];
+class AuthService<T extends Model<IUsuarios>> {
+  model: Models<T>;
+  constructor(model: Models<T>) {
+    this.model = model;
   }
 
   async login(dto: { email: string; senha: string }) {
     const validatedUser = await this.model.findOne({
-      attributes: ["id", "email", "senha"],
-      where: { email: dto.email },
+      attributes: ["id", "email", "senha", "role"],
+      where: { email: dto.email } as unknown as WhereOptions<Attributes<T>>,
     });
 
     if (!validatedUser) throw new Error("Usuario não encontrado.");
@@ -45,4 +47,4 @@ class AuthService {
   }
 }
 
-export const authService = new AuthService("usuarios");
+export const authService = new AuthService(UsuariosModel);

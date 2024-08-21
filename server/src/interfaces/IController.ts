@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { IService } from "./IService";
-import { Model, ModelStatic } from "sequelize";
+import { Model } from "sequelize";
 
 export interface IController<T extends Model<T>> {
   serviceEntity: IService<Model<T>>;

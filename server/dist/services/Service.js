@@ -8,17 +8,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Service = void 0;
-const models_1 = __importDefault(require("../models"));
 const uuid_1 = require("uuid");
 const bcrypt_1 = require("bcrypt");
 class Service {
-    constructor(nameModel) {
-        this.model = models_1.default[nameModel];
+    constructor(model) {
+        this.model = model;
     }
     getUsers() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -51,6 +47,7 @@ class Service {
                 nome: dto.nome,
                 email: dto.email,
                 senha: passwdHash,
+                role: dto.role,
             };
             const createdUser = yield this.model.create(user);
             return createdUser;

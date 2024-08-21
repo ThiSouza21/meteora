@@ -9,34 +9,38 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const sequelize_1 = require("sequelize");
-const sequelize_2 = require("sequelize");
+/** @type {import('sequelize-cli').Migration} */
 module.exports = {
-    up(queryInterface, sequelize) {
+    up(queryInterface, DataType) {
         return __awaiter(this, void 0, void 0, function* () {
             yield queryInterface.createTable("usuarios", {
                 id: {
                     allowNull: false,
                     primaryKey: true,
-                    type: sequelize_2.DataTypes.UUIDV4,
-                    defaultValue: sequelize_1.UUIDV4,
+                    type: DataType.UUID,
+                    defaultValue: DataType.UUIDV4,
                 },
                 nome: {
-                    type: sequelize_2.DataTypes.STRING,
+                    type: DataType.STRING,
                 },
                 email: {
-                    type: sequelize_2.DataTypes.STRING,
+                    type: DataType.STRING,
+                    unique: true,
                 },
                 senha: {
-                    type: sequelize_2.DataTypes.STRING,
+                    type: DataType.STRING,
+                },
+                role: {
+                    type: DataType.ENUM("admin", "user"),
+                    allowNull: false,
                 },
                 createdAt: {
                     allowNull: false,
-                    type: sequelize_2.DataTypes.DATE,
+                    type: DataType.DATE,
                 },
                 updatedAt: {
                     allowNull: false,
-                    type: sequelize_2.DataTypes.DATE,
+                    type: DataType.DATE,
                 },
             });
         });

@@ -5,16 +5,18 @@ import {
   ModelStatic,
   WhereOptions,
 } from "sequelize";
-import database from "../models";
-import { IService } from "../interfaces/IService";
 import { v4 as uuidv4 } from "uuid";
 import { IDto } from "../interfaces/IDto";
 import { hash } from "bcrypt";
 
-export class Service<T extends Model<T>> implements IService<T> {
-  model: ModelStatic<T>;
-  constructor(nameModel: string) {
-    this.model = database[nameModel] as ModelStatic<T>;
+export interface Models<T extends Model> extends ModelStatic<T> {
+  associate: () => void;
+}
+
+export class Service<T extends Model> {
+  model: Models<T>;
+  constructor(model: Models<T>) {
+    this.model = model;
   }
 
   async getUsers() {
@@ -45,6 +47,7 @@ export class Service<T extends Model<T>> implements IService<T> {
       nome: dto.nome,
       email: dto.email,
       senha: passwdHash,
+      role: dto.role,
     } as unknown as CreationAttributes<T>;
     const createdUser = await this.model.create(user);
     return createdUser;

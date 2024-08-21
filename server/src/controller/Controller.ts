@@ -4,7 +4,7 @@ import { IService } from "../interfaces/IService";
 import { Model } from "sequelize";
 import { IDto } from "../interfaces/IDto";
 
-export class Controller<T extends Model<T>> implements IController<T> {
+export class Controller<T extends Model> implements IController<T> {
   serviceEntity: IService<T>;
   constructor(service: IService<T>) {
     this.serviceEntity = service;
@@ -44,6 +44,10 @@ export class Controller<T extends Model<T>> implements IController<T> {
       const dto: IDto = req.body;
 
       if (!dto) throw new Error("Está faltando alguma informação.");
+
+      if (!dto.role) {
+        dto.role = "user";
+      }
 
       const user = await this.serviceEntity.createdUsers(dto);
 

@@ -1,6 +1,6 @@
 import "dotenv/config";
 import { NextFunction, Request, Response } from "express";
-import { decode, JwtPayload, verify } from "jsonwebtoken";
+import { JwtPayload, verify } from "jsonwebtoken";
 import { CustomRequest } from "../interfaces/CustomRequest";
 
 export const authentication = async (
@@ -8,36 +8,43 @@ export const authentication = async (
   res: Response,
   next: NextFunction
 ) => {
-  const token = req.headers.authorization;
+  const token = req.cookies?.token;
 
-  if (!token)
+  if (!token) {
+    return res.status(401).json({ error: { message: "Token não fornecido." } });
+  }
+
+  const secret = process.env.SECRET;
+
+  if (!secret) {
     return res
-      .status(400)
-      .json({ error: { message: "Token não informado na requisição." } });
-
-  const [, accessToken] = token.split(" ");
-
-  if (!accessToken)
-    return res
-      .status(400)
-      .json({ error: { message: "Tipo de authentication não passado." } });
+      .status(500)
+      .json({ error: { message: "SecretKey não encontrada." } });
+  }
 
   try {
-    const secret = process.env.SECRET;
-    if (!secret) throw new Error("SecretKey não foi acessada com sucesso.");
-
-    verify(accessToken, secret);
-
-    const { id, email } = decode(accessToken) as JwtPayload;
+    const decoded = verify(token, secret) as JwtPayload;
 
     req.user = {
-      id: id,
-      email: email,
+      id: decoded.id,
+      email: decoded.email,
     };
 
     next();
-  } catch (error) {
-    if (error instanceof Error)
-      res.status(400).json({ error: { message: error.message } });
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      if (error.name === "TokenExpiredError") {
+        return res.status(401).json({ error: { message: "Token expirado." } });
+      }
+      if (error.name === "JsonWebTokenError") {
+        return res.status(401).json({ error: { message: "Token inválido." } });
+      }
+
+      return res.status(400).json({ error: { message: error.message } });
+    }
+
+    return res
+      .status(400)
+      .json({ error: { message: "Erro ao verificar token." } });
   }
 };
